@@ -1,3 +1,5 @@
+package cc;
+
 import javazoom.jlgui.basicplayer.BasicPlayer;
 import java.io.File;
 import java.util.Timer;
