@@ -1,21 +1,20 @@
 Package cc;
 
 Helpers
-    letra = (['a'..'z']|['A'..'Z']|'á'|'é'|'í'|'ó'|'ú'|'ä'|'ë'|'ï'|'ö'|'ü');
     digito = ['0'..'9'];
-    simb = [0..0xffff];
+    todos = [0..0xffff];
+    caracteres_texto = [todos - ['[' + [']' + [':' + ['.' + [10 + 13]]]]]];
 
 Tokens
     l_brack = '[';
     r_brack = ']';
     points = ':';
     point = '.';
-    catg = 'id' | 'ar' | 'ti' | 'by' | 're' | 've';
-    titulo = (letra|simb|digito)+;
+    catg = 'id' | 'ar' | 'ti' | 'al' | 'by' | 're' | 've';
+
+    numero = digito+;
+    titulo = caracteres_texto+;
     blank = (' '| 10 | 13 )+;
-    min = digito+;
-    seg = digito+;
-    ms = digito+;
 
 Ignored Tokens
     blank;
@@ -25,8 +24,8 @@ Productions
         {data} l_brack catg points cadena r_brack |
         {song} l_brack tiempo r_brack cadena;
 
-    tiempo = min points seg point ms;
+    tiempo = [min]:numero points [seg]:numero point [ms]:numero;
 
-    cadena = 
-        {simple} titulo | 
+    cadena =
+        {simple} titulo |
         {compuesta} titulo cadena;
