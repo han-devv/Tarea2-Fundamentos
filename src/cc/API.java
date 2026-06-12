@@ -9,8 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class visitador extends DepthFirstAdapter{
-    // Repositorio para las líneas de la canción sincronizadas
+public class API extends DepthFirstAdapter{
+    // Repositorio para las líneas de la canción sincronizada
     private final ArrayList<LineaLyric> lineasCancion = new ArrayList<>();
 
     // Repositorio para los metadatos (ej: "ar" -> "Queen")

@@ -20,8 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class KaraokeUI {
-
+public class KaraokeUIzzzzzzzz {
     private final JFrame frame;
     private final JLabel tituloValor;
     private final JLabel artistaValor;
@@ -34,7 +33,7 @@ public class KaraokeUI {
     private java.util.Timer timer;
     private List<LineaLyric> lineas = Collections.emptyList();
 
-    public KaraokeUI() {
+    public KaraokeUIzzzzzzzz() {
         frame = new JFrame("Karaoke");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setMinimumSize(new Dimension(900, 560));
