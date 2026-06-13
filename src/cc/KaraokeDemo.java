@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 public class KaraokeDemo {
 
-    static File[] mp3s = new File("C:\\Users\\illan\\IdeaProjects\\Tarea2-Fundamentos\\src\\mp3").listFiles();
-    static File[] lyrics = new File("C:\\Users\\illan\\IdeaProjects\\Tarea2-Fundamentos\\src\\lyrics").listFiles();
+    static File[] mp3s = new File("./src/mp3").listFiles();
+    static File[] lyrics = new File("./src/lyrics").listFiles();
     static ArrayList<Cancion> repositorio = Repositorio();
 
     private static ArrayList<Cancion> Repositorio () {

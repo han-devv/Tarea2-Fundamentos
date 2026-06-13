@@ -13,6 +13,20 @@ public class Reproductor {
         player = new BasicPlayer();
     }
 
+    //METODO EXTRA AGREGADO POR EL GRUPO PARA CONFIGURAR AL VOLUMEN!!!
+    public void setVolumen(int porcentaje) {
+        if (player != null) {
+            try {
+                // BasicPlayer espera un valor entre 0.0 y 1.0
+                double ganancia = porcentaje / 100.0;
+                player.setGain(ganancia);
+            } catch (Exception e) {
+                System.out.println("Error ajustando volumen: " + e.getMessage());
+            }
+        }
+    }
+    // FIN DEL METODO
+
     public void Play() throws Exception {
         player.play();
     }
