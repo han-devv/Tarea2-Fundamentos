@@ -1,32 +1,24 @@
 Package cc;
 
 Helpers
-    letra = (['a'..'z']|['A'..'Z']|'á'|'é'|'í'|'ó'|'ú'|'ä'|'ë'|'ï'|'ö'|'ü');
-    digito = ['0'..'9'];
-    simb = [0..0xffff];
+    // Rango limpio: Ignora los corchetes (91 y 93), los dos puntos (58) y saltos de línea (10, 13)
+    caracter = [32..57] | [59..90] | 92 | [94..255];
 
 Tokens
-    l_brack = '[';
-    r_brack = ']';
-    points = ':';
-    point = '.';
-    catg = 'id' | 'ar' | 'ti' | 'by' | 're' | 've';
-    titulo = (letra|simb|digito)+;
-    blank = (' '| 10 | 13 )+;
-    min = digito+;
-    seg = digito+;
-    ms = digito+;
+    c_izq = '[';
+    c_der = ']';
+    d_puntos = ':';
+    texto = caracter+;
+    saltos = (10 | 13)+;
 
 Ignored Tokens
-    blank;
+    saltos;
 
 Productions
-    line =
-        {data} l_brack catg points cadena r_brack |
-        {song} l_brack tiempo r_brack cadena;
+    // Como lees línea por línea en Java, esto procesa exactamente una línea a la vez
+    linea = c_izq [izq]:texto d_puntos [adentro]:fragmento* c_der [afuera]:fragmento*;
 
-    tiempo = min points seg point ms;
-
-    cadena = 
-        {simple} titulo | 
-        {compuesta} titulo cadena;
+    // Permite que la letra o los tiempos tengan dos puntos intercalados sin crashear
+    fragmento =
+        {txt} texto |
+        {col} d_puntos;
