@@ -270,7 +270,7 @@ public class KaraokeUI extends JFrame {
 
     /**
      * Metodo auxiliar para calcular la duración total de la canción basado en los metadatos
-     * o asumiendo un margen extra al final de la última letra cantada.
+     * o asumiendo un margen extra al final de la Ultima letra cantada.
      */
     private long calcularDuracionTotal(Cancion cancion) {
         Map<String, String> meta = cancion.getMetadatos();
