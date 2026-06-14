@@ -8,6 +8,11 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Map;
 
+/**
+ * Interfaz grafica principal del Karaoke.
+ * Gestiona la reproducción visual, controles de usuario y el hilo de sincronización
+ * entre la música (MP3) y las letras (LRC).
+ */
 public class KaraokeUI extends JFrame {
     private JPanel panel1;
     private JButton previousButton;
@@ -25,16 +30,18 @@ public class KaraokeUI extends JFrame {
     private boolean isPaused = false;
     private Reproductor reproductor = new Reproductor();
 
-    // -- variables --
+    // -- Variables de estado del reproductor --
     private ArrayList<Cancion> repositorio;
     private int index = 0;
     private Cancion actual;
+
+    // Ajuste de milisegundos para sincronizar retrasos del audio respecto a la letra
     private volatile long latenciaGlobal = -1100;
 
-    // Control del hilo de fondo
+    // Control del hilo de fondo para no bloquear la interfaz grafica
     private Thread hiloReproduccion;
 
-    // Variables para calcular la sincronización en tiempo real
+    // Variables para calcular la sincronizacian
     private long startTime;
     private long accumulatedPauseTime;
     private long pauseBeginTime;
@@ -42,6 +49,7 @@ public class KaraokeUI extends JFrame {
     public KaraokeUI(ArrayList<Cancion> repositorio) {
         this.repositorio = repositorio;
 
+        // Configuracion basica de la ventana
         setTitle("Karaoke");
         setContentPane(panel1);
         setSize(800, 600);
@@ -49,7 +57,7 @@ public class KaraokeUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
 
-        // Boton Play/Pause
+        // Boton Play/Pause: Gestiona la reanudacion y la lagica de tiempos acumulados en pausa
         btnPlayPause.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -58,13 +66,13 @@ public class KaraokeUI extends JFrame {
                 try {
                     if (isPaused) {
                         isPaused = false;
-                        // Sumamos el tiempo que estuvimos en pausa
+                        // Acumulamos el tiempo que duro la pausa para no desfasar la letra
                         accumulatedPauseTime += (System.currentTimeMillis() - pauseBeginTime);
                         reproductor.Continuar();
                         btnPlayPause.setText("❚❚");
                     } else {
                         isPaused = true;
-                        // Registramos en qué momento pausamos
+                        // Registramos el instante exacto en el que pausamos
                         pauseBeginTime = System.currentTimeMillis();
                         reproductor.Pausa();
                         btnPlayPause.setText("▶");
@@ -75,23 +83,13 @@ public class KaraokeUI extends JFrame {
             }
         });
 
-        // Volumen
-        sliderVolumen.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int volumenActual = sliderVolumen.getValue();
-                // Aquí debes implementar el cambio de volumen en tu Reproductor
-            }
-        });
-
         // Boton Next
         nextButton.addActionListener(e -> nextSong());
 
         // Boton Previous
         previousButton.addActionListener(e -> prevSong());
 
-        // Volumen
-        // Asegúrate de que tu slider en el diseñador visual (form) esté configurado de 0 a 100.
+        // Volumen: Se ajusta segun el slider
         sliderVolumen.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -103,12 +101,16 @@ public class KaraokeUI extends JFrame {
             }
         });
 
+        // Inicia automaticamente la primera cancion si existe repositorio
         if (this.repositorio != null && !this.repositorio.isEmpty()) {
             this.index = 0; // Asegura que partimos en la canción 1
             reproducir();   // Inicia la carga y la reproducción
         }
     }
 
+    /**
+     * Avanza a la siguiente cancion en la lista, volviendo al inicio si llega al final.
+     */
     public void nextSong() {
         if (repositorio == null || repositorio.isEmpty()) return;
         index++;
@@ -116,6 +118,9 @@ public class KaraokeUI extends JFrame {
         reproducir();
     }
 
+    /**
+     * Retrocede a la cancion anterior.
+     */
     public void prevSong() {
         if (repositorio == null || repositorio.isEmpty()) return;
         index--;
@@ -123,8 +128,11 @@ public class KaraokeUI extends JFrame {
         reproducir();
     }
 
+    /**
+     * Logica principal de reproducción y sincronización en tiempo real.
+     */
     public void reproducir() {
-        // 1. Detener el hilo y la canción anterior
+        // 1. Detener hilo anterior y la cancion actual en curso
         if (hiloReproduccion != null && hiloReproduccion.isAlive()) {
             hiloReproduccion.interrupt();
         }
@@ -132,7 +140,7 @@ public class KaraokeUI extends JFrame {
             reproductor.Stop();
         } catch (Exception ignored) {}
 
-        // 2. Actualizar la interfaz con los datos de la nueva canción
+        // 2. Cargar los metadatos de la nueva canción a la UI
         actual = repositorio.get(index);
         Map<String, String> metadatos = actual.getMetadatos();
         titulo.setText(metadatos.getOrDefault("ti", "Desconocido"));
@@ -142,7 +150,7 @@ public class KaraokeUI extends JFrame {
         isPaused = false;
         btnPlayPause.setText("❚❚");
 
-        // --- SOLUCIÓN: PREPARAR LAS LETRAS PARA LA INTRO MUSICAL ---
+        // --- PREPARAR LAS LETRAS PARA LA INTRO MUSICAL ---
         ArrayList<LineaLyric> lines = actual.getLines();
         if (lines != null && !lines.isEmpty()) {
             previousLyrics.setText("");
@@ -155,7 +163,7 @@ public class KaraokeUI extends JFrame {
         }
         // -----------------------------------------------------------
 
-        // 3. Crear el hilo de reproducción
+        // 3. Crear el hilo independiente de sincronizacion de letras
         hiloReproduccion = new Thread(() -> {
             try {
                 // Leer el offset del archivo si existe
@@ -176,23 +184,25 @@ public class KaraokeUI extends JFrame {
                 long duracionTotalMs = calcularDuracionTotal(actual);
                 long lastSecond = -1;
 
+                // Bucle de sincronizacion: Recorre cada línea de letra cargada
                 for (int i = 0; i < lines.size(); i++) {
                     LineaLyric linea = lines.get(i);
 
-                    // --- AQUÍ OCURRE LA MAGIA DE LA CASCADA ---
+                    // Preparar los textos en "cascada" (Anterior, Actual y Siguiente)
                     final String txtMain = linea.getTexto();
                     final String txtPrev = (i > 0) ? lines.get(i - 1).getTexto() : "";
                     final String txtNext = (i < lines.size() - 1) ? lines.get(i + 1).getTexto() : "";
 
                     while (true) {
+                        // Verifica si el hilo fue interrumpido
                         if (Thread.currentThread().isInterrupted()) return;
                         if (isPaused) { Thread.sleep(50); continue; }
 
-                        // La latenciaGlobal controlable con el teclado se suma aquí
+                        // La latenciaGlobal controlable con el teclado se suma
                         long ajusteTotal = offsetLrc + latenciaGlobal;
                         long currentAudioTime = (System.currentTimeMillis() - startTime - accumulatedPauseTime) + ajusteTotal;
 
-                        // Actualizar cronómetro cada segundo
+                        // Actualizar cronometro cada segundo
                         long currentSec = Math.max(0, currentAudioTime / 1000);
                         if (currentSec != lastSecond) {
                             lastSecond = currentSec;
@@ -200,7 +210,8 @@ public class KaraokeUI extends JFrame {
                             SwingUtilities.invokeLater(() -> duracion.setText(textoTiempo));
                         }
 
-                        // --- ACTUALIZACIÓN DE LAS 3 LÍNEAS AL MISMO TIEMPO ---
+                        // --- ACTUALIZACION DE LETRAS ---
+                        // Si el tiempo de reproducción actual alcanza el timestamp de la letra
                         if (currentAudioTime >= linea.getTiempoMs()) {
                             SwingUtilities.invokeLater(() -> {
                                 mainLyrics.setText(txtMain);
@@ -214,7 +225,7 @@ public class KaraokeUI extends JFrame {
                     }
                 }
 
-                // Ciclo final para cuando se acaba la letra pero la música sigue
+                // Ciclo final para cuando se acaba la letra pero la musica sigue
                 while (!Thread.currentThread().isInterrupted()) {
                     if (isPaused) { Thread.sleep(50); continue; }
 
@@ -229,7 +240,6 @@ public class KaraokeUI extends JFrame {
                         });
                         break;
                     }
-
                     long currentSec = Math.max(0, currentAudioTime / 1000);
                     if (currentSec != lastSecond) {
                         lastSecond = currentSec;
@@ -238,7 +248,6 @@ public class KaraokeUI extends JFrame {
                     }
                     Thread.sleep(100);
                 }
-
             } catch (InterruptedException e) {
             } catch (Exception e) {
                 System.out.println("Error en reproducción: " + e.getMessage());
@@ -249,7 +258,9 @@ public class KaraokeUI extends JFrame {
         hiloReproduccion.start();
     }
 
-    // Convierte milisegundos a formato MM:SS (Ej: 01:45)
+    /**
+     * Metodo auxiliar que convierte milisegundos a formato estándar MM:SS
+     */
     private String formatearTiempo(long millis) {
         long segundosTotales = millis / 1000;
         long minutos = segundosTotales / 60;
@@ -257,7 +268,10 @@ public class KaraokeUI extends JFrame {
         return String.format("%02d:%02d", minutos, segundos);
     }
 
-    // Calcula la duración total de la canción
+    /**
+     * Metodo auxiliar para calcular la duración total de la canción basado en los metadatos
+     * o asumiendo un margen extra al final de la última letra cantada.
+     */
     private long calcularDuracionTotal(Cancion cancion) {
         Map<String, String> meta = cancion.getMetadatos();
         // Intentar leer el tag [length: 06:28] del archivo .lrc
@@ -270,7 +284,7 @@ public class KaraokeUI extends JFrame {
                 }
             } catch (Exception ignored) {}
         }
-        // Si no hay tag de duración, tomamos la última línea cantada + 10 segundos extra de final
+        // Si no hay tag de duracion, tomamos la ultima linea cantada + 10 segundos extra de final
         ArrayList<LineaLyric> lineas = cancion.getLines();
         if (lineas != null && !lineas.isEmpty()) {
             return lineas.get(lineas.size() - 1).getTiempoMs() + 10000;

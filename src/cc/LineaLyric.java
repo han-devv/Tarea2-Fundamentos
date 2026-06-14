@@ -1,8 +1,12 @@
 package cc;
 
+/**
+ * Modelo de datos que representa una unica linea del subtitulo.
+ * Implementa "Comparable" para poder ordenar las letras cronologicamente de forma sencilla.
+ */
 public class LineaLyric implements Comparable<LineaLyric> {
-    private final long tiempoMs;
-    private final String texto;
+    private final long tiempoMs; // Instante en el que debe aparecer en milisegundos
+    private final String texto;  // Texto de la cancion
 
     public LineaLyric(long tiempoMs, String texto) {
         this.tiempoMs = Math.max(0L, tiempoMs);
@@ -21,6 +25,9 @@ public class LineaLyric implements Comparable<LineaLyric> {
         return texto;
     }
 
+    /**
+     * Convierte el tiempo base a un formato legible [mm:ss.xx]
+     */
     public String getTiempoFormateado() {
         long minutos = tiempoMs / 60_000L;
         long segundos = (tiempoMs % 60_000L) / 1_000L;
@@ -28,6 +35,9 @@ public class LineaLyric implements Comparable<LineaLyric> {
         return String.format("%02d:%02d.%02d", minutos, segundos, centesimas);
     }
 
+    /**
+     * Determina el orden cronologico comparando los milisegundos.
+     */
     @Override
     public int compareTo(LineaLyric otra) {
         return Long.compare(this.tiempoMs, otra.tiempoMs);
@@ -38,6 +48,7 @@ public class LineaLyric implements Comparable<LineaLyric> {
         return "[" + getTiempoFormateado() + "]" + texto;
     }
 
+    //Metodos de parsing de respaldo por si se usan constructores en string puro
     public static long parseTiempoMs(String tiempoLrc) {
         if (tiempoLrc == null) {
             return 0L;

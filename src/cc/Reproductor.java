@@ -4,7 +4,10 @@ import javazoom.jlgui.basicplayer.BasicPlayer;
 import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
-//q es esta basura loco
+
+/**
+ * Clase base (adjunta en la actividad)
+ */
 public class Reproductor {
 
     private BasicPlayer player;
