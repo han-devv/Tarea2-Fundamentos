@@ -1,7 +1,6 @@
 Package cc;
 
 Helpers
-    // Rango limpio: Ignora los corchetes (91 y 93), los dos puntos (58) y saltos de línea (10, 13)
     caracter = [32..57] | [59..90] | 92 | [94..255];
 
 Tokens
@@ -15,10 +14,8 @@ Ignored Tokens
     saltos;
 
 Productions
-    // Como lees línea por línea en Java, esto procesa exactamente una línea a la vez
     linea = c_izq [izq]:texto d_puntos [adentro]:fragmento* c_der [afuera]:fragmento*;
 
-    // Permite que la letra o los tiempos tengan dos puntos intercalados sin crashear
-    fragmento = 
+    fragmento =
         {txt} texto | 
         {col} d_puntos;
