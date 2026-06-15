@@ -17,5 +17,5 @@ Productions
     linea = c_izq [izq]:texto d_puntos [adentro]:fragmento* c_der [afuera]:fragmento*;
 
     fragmento =
-        {txt} texto |
+        {txt} texto | 
         {col} d_puntos;
